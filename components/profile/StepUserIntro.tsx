@@ -99,9 +99,19 @@ export default function StepUserIntro({
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const data = await res.json();
-      console.log('AI DONE', requestId);
+      console.log('[AI] 응답 requestId:', data.requestId, '| requestId sent:', requestId);
 
-      // 기존 값 무조건 덮어쓰기
+      // Gemini 실패 원인 콘솔 출력 — Vercel 로그 + 브라우저 개발자도구에서 확인
+      if (data.geminiError) {
+        console.error('[AI] Gemini 실패 원인:', data.geminiError);
+        setError(`AI 문구 생성 실패: ${data.geminiError}`);
+        return; // 실패 시 textarea 유지
+      }
+      if (data.warning) {
+        console.warn('[AI] 경고:', data.warning);
+      }
+
+      // 성공 시 기존 값 무조건 덮어쓰기
       setValue(data.intro || DEFAULT_INTRO);
 
     } catch (e: any) {
