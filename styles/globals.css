@@ -1,0 +1,173 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap');
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --navy-950: #091429;
+  --navy-900: #0e1e3c;
+  --navy-800: #152a52;
+  --navy-700: #1e3a6e;
+  --navy-600: #2d538c;
+  --navy-500: #3a6aa8;
+  --navy-400: #5a87be;
+  --gold: #c9a84c;
+  --gold-light: #e8d5a3;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #f5f6fa;
+  font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 모바일 최대 너비 컨테이너 */
+.mobile-container {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 진행률 바 */
+.progress-bar {
+  height: 3px;
+  background: #e2e8f0;
+  border-radius: 99px;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: var(--navy-700);
+  border-radius: 99px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 카드 선택 */
+.profile-card {
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.profile-card.selected {
+  border-color: var(--navy-700);
+  background: #f0f4fb;
+}
+.profile-card:active {
+  transform: scale(0.98);
+}
+
+/* 버튼 */
+.btn-primary {
+  width: 100%;
+  background: var(--navy-800);
+  color: white;
+  padding: 18px 24px;
+  border-radius: 14px;
+  font-size: 17px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: -0.3px;
+}
+.btn-primary:active {
+  transform: scale(0.98);
+  background: var(--navy-900);
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  width: 100%;
+  background: transparent;
+  color: var(--navy-800);
+  padding: 16px 24px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 500;
+  border: 2px solid var(--navy-800);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-secondary:active {
+  transform: scale(0.98);
+}
+
+/* 인풋 */
+.form-input {
+  width: 100%;
+  border: 1.5px solid #d1d9e6;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 16px;
+  font-family: inherit;
+  color: #1a2540;
+  background: white;
+  transition: border-color 0.2s;
+  outline: none;
+}
+.form-input:focus {
+  border-color: var(--navy-600);
+}
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 8px;
+}
+
+/* 로딩 shimmer */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e0e0e0 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Demo 배지 */
+.demo-badge {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 99px;
+  letter-spacing: 0.5px;
+}
+
+/* 스크롤바 숨기기 */
+::-webkit-scrollbar {
+  display: none;
+}
+* {
+  scrollbar-width: none;
+}
+
+/* 랜딩 페이지 하단 로고 고정 */
+.landing-logo-bottom {
+  position: absolute;
+  bottom: 36px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
