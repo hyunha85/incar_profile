@@ -113,11 +113,11 @@ export default function StepProfileType({ selected, onSelect, onNext, isDemo }: 
             <button
               onClick={e => { e.stopPropagation(); setModalType(type); }}
               style={{
-                marginTop: '12px', paddingTop: '12px',
+                marginTop: '12px',
                 borderTop: '1px solid #f1f5f9',
                 width: '100%', textAlign: 'left',
                 fontSize: '12px', color: '#3a6aa8', fontWeight: 600,
-                background: 'transparent', border: 'none', borderTop: '1px solid #f1f5f9',
+                background: 'transparent', border: 'none',
                 cursor: 'pointer', padding: '12px 0 0',
               }}
             >
