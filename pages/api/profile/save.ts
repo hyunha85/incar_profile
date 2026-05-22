@@ -21,74 +21,75 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const anonKey     = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // Supabase 미설정 시 명확한 에러
   if (!supabaseUrl || !(serviceKey || anonKey)) {
-    console.error('Supabase env missing');
+    console.error('[save] Supabase 환경변수 없음');
     return res.status(500).json({ success: false, error: 'Supabase 환경변수가 설정되지 않았습니다.' });
   }
 
+  console.log('[save] supabaseUrl:', supabaseUrl?.slice(0, 30));
+
   const { createClient } = await import('@supabase/supabase-js');
-  // Service Role 우선 (Storage 업로드 + DB insert 권한 필요)
   const supabase = createClient(supabaseUrl, serviceKey || anonKey!);
   const id = uuidv4();
 
-  let photoUrl: string | null        = null;
+  let photoUrl: string | null = null;
   let processedPhotoUrl: string | null = null;
 
-  // ── 원본 사진 Storage 업로드 ──
+  // ── Storage 업로드 — 실패해도 절대 throw하지 않음 ──
   if (profileData.photoUrl?.startsWith('data:')) {
     try {
-      const base64   = profileData.photoUrl.replace(/^data:image\/\w+;base64,/, '');
-      const buffer   = Buffer.from(base64, 'base64');
-      const ext      = profileData.photoUrl.includes('data:image/png') ? 'png' : 'jpg';
-      const fileName = `originals/${id}.${ext}`;
+      const base64 = profileData.photoUrl.replace(/^data:image\/\w+;base64,/, '');
+      const buffer = Buffer.from(base64, 'base64');
+      const ext    = profileData.photoUrl.includes('data:image/png') ? 'png' : 'jpg';
+      const path   = `originals/${id}.${ext}`;
 
       const { error } = await supabase.storage
         .from('profile-images')
-        .upload(fileName, buffer, { contentType: `image/${ext}`, upsert: true });
+        .upload(path, buffer, { contentType: `image/${ext}`, upsert: true });
 
       if (error) {
-        console.warn('원본 사진 업로드 실패:', error.message);
+        console.warn('[save] 원본 사진 업로드 실패 (무시):', error.message);
+        // 실패해도 계속 진행 — photoUrl은 null 유지
       } else {
-        const { data } = supabase.storage.from('profile-images').getPublicUrl(fileName);
+        const { data } = supabase.storage.from('profile-images').getPublicUrl(path);
         photoUrl = data.publicUrl;
-        console.log('원본 사진 업로드 성공:', photoUrl);
+        console.log('[save] 원본 사진 업로드 성공');
       }
     } catch (e: any) {
-      console.warn('원본 사진 처리 오류:', e.message);
+      console.warn('[save] 원본 사진 예외 (무시):', e.message);
     }
   } else if (profileData.photoUrl) {
-    // 이미 URL이면 그대로 사용
     photoUrl = profileData.photoUrl;
   }
 
-  // ── 누끼 이미지 Storage 업로드 ──
   if (profileData.processedPhotoUrl?.startsWith('data:')) {
     try {
-      const base64   = profileData.processedPhotoUrl.replace(/^data:image\/\w+;base64,/, '');
-      const buffer   = Buffer.from(base64, 'base64');
-      const fileName = `processed/${id}.png`;
+      const base64 = profileData.processedPhotoUrl.replace(/^data:image\/\w+;base64,/, '');
+      const buffer = Buffer.from(base64, 'base64');
+      const path   = `processed/${id}.png`;
 
       const { error } = await supabase.storage
         .from('profile-images')
-        .upload(fileName, buffer, { contentType: 'image/png', upsert: true });
+        .upload(path, buffer, { contentType: 'image/png', upsert: true });
 
       if (error) {
-        console.warn('누끼 사진 업로드 실패:', error.message);
+        console.warn('[save] 누끼 사진 업로드 실패 (무시):', error.message);
       } else {
-        const { data } = supabase.storage.from('profile-images').getPublicUrl(fileName);
+        const { data } = supabase.storage.from('profile-images').getPublicUrl(path);
         processedPhotoUrl = data.publicUrl;
-        console.log('누끼 사진 업로드 성공:', processedPhotoUrl);
+        console.log('[save] 누끼 사진 업로드 성공');
       }
     } catch (e: any) {
-      console.warn('누끼 사진 처리 오류:', e.message);
+      console.warn('[save] 누끼 사진 예외 (무시):', e.message);
     }
   } else if (profileData.processedPhotoUrl) {
     processedPhotoUrl = profileData.processedPhotoUrl;
   }
 
-  // ── DB insert ──
-  const insertData = {
+  // ── DB insert — 사진 업로드 성공 여부와 무관하게 항상 실행 ──
+  console.log('[save] DB insert 시작, id:', id, 'photoUrl:', photoUrl ? '있음' : '없음');
+
+  const { error: dbError } = await supabase.from('profiles').insert({
     id,
     profile_type:        profileData.profileType,
     agent_name:          profileData.agentInfo?.name          || null,
@@ -99,34 +100,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     agent_specialty:     profileData.agentInfo?.specialty     || [],
     agent_phone:         profileData.agentInfo?.phone         || null,
     agent_email:         profileData.agentInfo?.email         || null,
-    agent_kakao:         (profileData.agentInfo as any)?.kakao      || null,
-    agent_blog:          (profileData.agentInfo as any)?.blog       || null,
-    agent_instagram:     (profileData.agentInfo as any)?.instagram  || null,
-    agent_youtube:       (profileData.agentInfo as any)?.youtube    || null,
+    agent_kakao:         profileData.agentInfo?.kakao         || null,
+    agent_blog:          profileData.agentInfo?.blog          || null,
+    agent_instagram:     profileData.agentInfo?.instagram     || null,
+    agent_youtube:       profileData.agentInfo?.youtube       || null,
     photo_url:           photoUrl,
     processed_photo_url: processedPhotoUrl,
-    ai_intro:            profileData.aiIntro   || null,
-    user_intro:          profileData.userIntro || null,
+    ai_intro:            profileData.aiIntro                  || null,
+    user_intro:          profileData.userIntro                || null,
     created_at:          new Date().toISOString(),
-  };
-
-  console.log('[save] DB insert 시작, id:', id);
-
-  const { error: dbError } = await supabase.from('profiles').insert(insertData);
+  });
 
   if (dbError) {
-    console.error('[save] DB insert 실패:', dbError.message, dbError.code);
+    console.error('[save] DB insert 실패:', dbError.message, '| code:', dbError.code);
     return res.status(500).json({
       success: false,
       error: `프로필 저장 실패: ${dbError.message}`,
-      code: dbError.code,
     });
   }
 
   console.log('[save] 저장 완료, id:', id);
-  return res.status(200).json({
-    success: true,
-    id,
-    url: `/profile/${id}`,
-  });
+  return res.status(200).json({ success: true, id });
 }
