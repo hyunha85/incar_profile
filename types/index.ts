@@ -12,6 +12,8 @@ export interface AgentInfo {
   email?: string;         // 선택
   kakao?: string;         // 선택
   blog?: string;          // 선택
+  instagram?: string;     // 인스타그램
+  youtube?: string;       // 유튜브
   region?: string;        // 하위호환용
   slogan?: string;        // 하위호환용
 }
