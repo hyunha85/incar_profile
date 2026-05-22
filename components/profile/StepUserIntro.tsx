@@ -15,7 +15,7 @@ const DEFAULT_INTRO =
   '고객 상황에 맞는 보험 설계를 통해\n신뢰할 수 있는 금융 파트너가 되겠습니다.';
 
 function safe(v: any): string {
-  if (v === undefined || v === null || v === 'undefined' || v === 'null') return '';
+  if (v === undefined || v === null || String(v) === 'undefined' || String(v) === 'null') return '';
   return String(v).trim();
 }
 
@@ -35,7 +35,7 @@ function buildInitialValue(agentInfo: AgentInfo): string {
   ].filter((l, i) => !(i === 0 && !career)).join('\n');
 }
 
-// Demo용 변형 3가지
+// Demo 전용 — 3가지 변형으로 매번 다른 문구
 function buildDemoVariant(agentInfo: AgentInfo, seed: number): string {
   const careersArr = Array.isArray(agentInfo?.careers)
     ? agentInfo.careers.filter(c => c?.trim()) : [];
@@ -56,7 +56,7 @@ function buildDemoVariant(agentInfo: AgentInfo, seed: number): string {
     ],
     [
       '고객 한 분 한 분의 인생을 함께 설계합니다.',
-      career ? `${career}의 경험으로,` : '',
+      career ? `${career}의 경험을 바탕으로,` : '',
       `${spec} 전문가로서 최선을 다하겠습니다.`,
     ],
   ];
@@ -74,43 +74,41 @@ export default function StepUserIntro({
     if (!userIntro) setValue(buildInitialValue(agentInfo));
   }, []);
 
-  // ── AI 추천 문구 생성 ──
-  // 캐시/재사용 로직 없음. 클릭마다 무조건 새 API 호출.
+  // ── 핵심: confirmOverwrite 없음, 클릭마다 무조건 새 Gemini 호출 ──
   const handleAIClick = async () => {
     const requestId = Date.now();
-    console.log('AI generate clicked', requestId); // 매 클릭 확인용
+    console.log('AI CLICK', requestId); // 매 클릭마다 찍혀야 함
 
     setLoading(true);
     setError('');
 
     try {
       if (isDemo) {
-        // Demo: 1.5초 후 3가지 변형 중 하나 선택
         await new Promise(r => setTimeout(r, 1500));
         setValue(buildDemoVariant(agentInfo, requestId));
         return;
       }
 
-      // 실제 모드 — URL 쿼리에 requestId 추가로 브라우저/프록시 캐시 완전 우회
+      // ?r= 쿼리로 URL 캐시 우회, body에도 requestId 포함
       const res = await fetch(`/api/ai/generate?r=${requestId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ agentInfo, requestId }), // body에도 requestId 포함
+        body: JSON.stringify({ agentInfo, requestId }),
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const data = await res.json();
-      console.log('AI generate done, requestId:', data.requestId);
+      console.log('AI DONE', requestId);
 
-      // 기존 값 무시하고 무조건 새 응답으로 덮어쓰기
+      // 기존 값 무조건 덮어쓰기
       setValue(data.intro || DEFAULT_INTRO);
 
     } catch (e: any) {
-      console.error('AI generate error:', e.message);
+      console.error('AI ERROR:', e.message);
       setError('문구 생성에 실패했습니다. 다시 시도해주세요.');
     } finally {
-      setLoading(false);
+      setLoading(false); // 반드시 finally에서 reset
     }
   };
 
@@ -128,16 +126,20 @@ export default function StepUserIntro({
         <p style={{ color: '#94a3b8', fontSize: '14px' }}>직접 작성하거나 AI 추천 문구를 수정하세요.</p>
       </div>
 
-      {/* AI 버튼 */}
+      {/* AI 버튼 — disabled는 loading 중일 때만, 그 외 항상 클릭 가능 */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
         <button
           onClick={handleAIClick}
           disabled={loading}
           style={{
-            background: 'white', border: '1.5px solid #d1dce8', borderRadius: '8px',
-            padding: '7px 14px', fontSize: '13px',
+            background: 'white',
+            border: '1.5px solid #d1dce8',
+            borderRadius: '8px',
+            padding: '7px 14px',
+            fontSize: '13px',
             color: loading ? '#94a3b8' : '#1e3a6e',
-            fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            cursor: loading ? 'not-allowed' : 'pointer',
           }}
         >
           {loading ? '생성 중...' : 'AI 추천 문구 생성'}
@@ -153,11 +155,20 @@ export default function StepUserIntro({
         onChange={e => setValue(e.target.value)}
         rows={8}
         style={{
-          width: '100%', border: '1.5px solid #d1d9e6', borderRadius: '12px',
-          padding: '16px', fontSize: '15px', fontFamily: 'inherit',
-          color: '#1a2540', background: 'white', outline: 'none',
-          resize: 'none', lineHeight: 1.8, caretColor: '#1e3a6e',
-          boxSizing: 'border-box', whiteSpace: 'pre-wrap',
+          width: '100%',
+          border: '1.5px solid #d1d9e6',
+          borderRadius: '12px',
+          padding: '16px',
+          fontSize: '15px',
+          fontFamily: 'inherit',
+          color: '#1a2540',
+          background: 'white',
+          outline: 'none',
+          resize: 'none',
+          lineHeight: 1.8,
+          caretColor: '#1e3a6e',
+          boxSizing: 'border-box',
+          whiteSpace: 'pre-wrap',
         }}
       />
       <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '6px' }}>
