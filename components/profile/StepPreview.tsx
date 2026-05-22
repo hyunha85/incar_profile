@@ -13,7 +13,7 @@ interface Props {
 export default function StepPreview({ profileData, onBack, isDemo }: Props) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
-  const [modal, setModal] = useState<{ id: string; url: string } | null>(null);
+  const [modal, setModal] = useState<{ id: string; url: string; warning?: string } | null>(null);
   const [toast, setToast] = useState(false);
   const [saveError, setSaveError] = useState('');
 
