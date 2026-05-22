@@ -1,45 +1,34 @@
 import { AgentInfo } from '@/types';
 
-const GEMINI_API_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+// 우선순위 순 — 첫 번째 실패 시 다음 모델로 자동 fallback
+const MODELS = [
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-preview-05-20',
+  'gemini-2.0-flash-lite',
+];
+
+const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
 function safe(v: any): string {
-  if (v === undefined || v === null || String(v) === 'undefined' || String(v) === 'null') return '';
+  if (!v || String(v) === 'undefined' || String(v) === 'null') return '';
   return String(v).trim();
 }
 
-export async function generateIntroWithGemini(
-  agentInfo: AgentInfo,
-  requestId?: number
-): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error('GEMINI_API_KEY not set');
-
-  // ── 정규화 — 직접 agentInfo.career / agentInfo.region 참조 금지 ──
+function buildPrompt(agentInfo: AgentInfo, seed: number): string {
   const name      = safe(agentInfo.name);
   const position  = safe(agentInfo.position) || safe((agentInfo as any).slogan) || '설계사';
   const company   = safe(agentInfo.company) || '인카금융서비스';
   const region    = safe(agentInfo.branch) || safe((agentInfo as any).region) || '';
 
-  // specialty — 실제 선택값만 (기본 보험 종목 자동 삽입 절대 금지)
   const specialtyArr = Array.isArray(agentInfo.specialty)
-    ? agentInfo.specialty.filter(s => s?.trim())
-    : [];
-  const specialty = specialtyArr.join(', '); // 없으면 빈 문자열
+    ? agentInfo.specialty.filter(s => s?.trim()) : [];
+  const specialty = specialtyArr.join(', ');
 
-  // careers — 배열 우선, 없으면 구버전 career
   const careersArr = Array.isArray(agentInfo.careers)
-    ? agentInfo.careers.filter(c => c?.trim())
-    : [];
+    ? agentInfo.careers.filter(c => c?.trim()) : [];
   const careerStr = safe((agentInfo as any).career);
-  const career = careersArr.length > 0
-    ? careersArr.join(', ')
-    : careerStr || '';
+  const career = careersArr.length > 0 ? careersArr.join(', ') : careerStr || '';
 
-  // requestId — 매 호출마다 다른 문구 보장
-  const seed = requestId || Date.now();
-
-  // 값 있는 항목만 프롬프트에 포함 (없는 항목 라인 제거)
   const infoLines = [
     name     && `이름: ${name}`,
     position && `직책: ${position}`,
@@ -49,9 +38,7 @@ export async function generateIntroWithGemini(
     career   && `경력: ${career}`,
   ].filter(Boolean).join('\n');
 
-  console.log('[Gemini] agentInfo 정규화:', { name, position, region, specialty, career, seed });
-
-  const prompt = `당신은 보험 설계사 퍼스널 브랜딩 전문가입니다.
+  return `당신은 보험 설계사 퍼스널 브랜딩 전문가입니다.
 아래 설계사 정보를 바탕으로 자기소개 문구를 작성해주세요.
 이전 문구와 다른 표현으로 작성해주세요. 요청번호: ${seed}
 
@@ -68,28 +55,65 @@ ${infoLines}
 - 전체 100~150자
 
 자기소개 문구만 출력. 따옴표나 부가 설명 없이.`;
+}
 
-  const res = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+async function callGemini(model: string, prompt: string, apiKey: string): Promise<string> {
+  const url = `${BASE_URL}/${model}:generateContent?key=${apiKey}`;
+  const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.95,
-        topP: 0.95,
-        maxOutputTokens: 300,
-      },
+      generationConfig: { temperature: 0.95, topP: 0.95, maxOutputTokens: 300 },
     }),
   });
 
-  if (!res.ok) throw new Error(`Gemini API ${res.status}: ${await res.text()}`);
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Gemini API ${res.status} (${model}): ${errText}`);
+  }
 
   const data = await res.json();
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-  if (!text) throw new Error('Gemini 응답 없음');
+  if (!text) throw new Error(`Gemini 응답 없음 (${model})`);
   if (/undefined|null/.test(text)) throw new Error('응답에 undefined/null 포함');
 
   return text;
+}
+
+export async function generateIntroWithGemini(
+  agentInfo: AgentInfo,
+  requestId?: number
+): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error('GEMINI_API_KEY not set');
+
+  const seed = requestId || Date.now();
+  const prompt = buildPrompt(agentInfo, seed);
+
+  console.log('[Gemini] 시도 모델 순서:', MODELS.join(' → '));
+
+  let lastError = '';
+  for (const model of MODELS) {
+    try {
+      console.log(`[Gemini] ${model} 호출 중...`);
+      const text = await callGemini(model, prompt, apiKey);
+      console.log(`[Gemini] ${model} 성공`);
+      return text;
+    } catch (e: any) {
+      lastError = e.message;
+      console.warn(`[Gemini] ${model} 실패:`, e.message);
+
+      // 503(과부하)이면 1초 대기 후 다음 모델 시도
+      if (e.message.includes('503')) {
+        await new Promise(r => setTimeout(r, 1000));
+      }
+      // 404(모델 없음)이면 즉시 다음 모델
+      // 그 외도 다음 모델로
+    }
+  }
+
+  throw new Error(`모든 모델 실패. 마지막 오류: ${lastError}`);
 }
 
 export function getFallbackIntro(agentInfo: AgentInfo): string {
