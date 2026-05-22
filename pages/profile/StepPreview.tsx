@@ -253,7 +253,7 @@ function Label({ children }: { children: React.ReactNode }) {
 }
 function Chevron() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" flexShrink={0}>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
       <path d="M9 18l6-6-6-6" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
