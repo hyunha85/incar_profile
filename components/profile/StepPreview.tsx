@@ -28,7 +28,8 @@ export default function StepPreview({ profileData, onBack, isDemo }: Props) {
 
     // Demo 모드 — 즉시 모달 표시
     if (isDemo) {
-      setModal({ id: 'demo-001', url: `${window.location.origin}/profile/demo-001` });
+      const demoId = profileData.profileType === 'simple' ? 'demo-002' : 'demo-001';
+      setModal({ id: demoId, url: `${window.location.origin}/profile/${demoId}` });
       return;
     }
 
@@ -81,12 +82,6 @@ export default function StepPreview({ profileData, onBack, isDemo }: Props) {
 
   return (
     <div style={{ background: '#f5f7fb', minHeight: 'calc(100dvh - 80px)', paddingBottom: '40px' }}>
-      {isDemo && (
-        <div style={{ background: '#1e3a6e', color: 'white', padding: '9px 20px', textAlign: 'center', fontSize: '13px', fontWeight: 600 }}>
-          DEMO — 실제 저장되지 않습니다
-        </div>
-      )}
-
       {/* 프로필 카드 */}
       <div style={{ padding: '20px 20px 0' }}>
         {isExpert ? <ExpertCard profileData={profileData} /> : <SimpleCard profileData={profileData} />}
@@ -185,67 +180,123 @@ const rowLink: React.CSSProperties = { display: 'flex', alignItems: 'center', ju
 export function ExpertCard({ profileData }: { profileData: ProfileData }) {
   const agent = profileData.agentInfo;
   const photo = profileData.processedPhotoUrl || profileData.photoUrl;
-  // 지점 + 직책 조합 (회사명 제거)
-  const subLine = [agent?.branch, agent?.position].filter(Boolean).join(' · ');
   const specialtyArr = agent?.specialty?.filter((s: string) => s?.trim()) || [];
 
   return (
-    <div style={{ background: '#0e1e3c', borderRadius: '18px', overflow: 'visible', position: 'relative', paddingBottom: '20px' }}>
-      {/* 사진 Hero 영역 */}
-      <div style={{ position: 'relative', borderRadius: '18px 18px 0 0', overflow: 'hidden', background: '#1a2f5a', minHeight: '320px' }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, #1a2f5a 0%, #0e1e3c 100%)' }} />
-        {photo ? (
-          <div style={{ position: 'absolute', bottom: '-24px', left: '50%', transform: 'translateX(-50%)', width: '75%', zIndex: 3 }}>
-            <img src={photo} alt={agent?.name} style={{ width: '100%', objectFit: 'contain', display: 'block', filter: 'drop-shadow(0 16px 32px rgba(0,0,0,0.4))' }} />
-          </div>
-        ) : (
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="80" height="100" viewBox="0 0 80 100" fill="none">
-              <circle cx="40" cy="28" r="22" fill="rgba(255,255,255,0.07)" />
-              <path d="M4 100 C4 65 76 65 76 100" fill="rgba(255,255,255,0.07)" />
-            </svg>
-          </div>
+    <div style={{
+      background: '#0a1530',
+      borderRadius: '20px',
+      overflow: 'hidden',
+      position: 'relative',
+      aspectRatio: '3 / 4',
+      minHeight: '420px',
+      boxShadow: 'none',
+    }}>
+
+      {/* z0: 배경 베이스 */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 0, background: '#0e2050' }} />
+
+      {/* z1: 왼쪽 삼각형 — 상단 밝은 블루 → 하단 어두운 네이비 */}
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 1,
+        background: 'linear-gradient(to bottom, #1e4080 0%, #0a1835 100%)',
+        clipPath: 'polygon(0 0, 75% 0, 0 50%)',
+      }} />
+
+      {/* z2: 인물 사진 */}
+      {photo ? (
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+          zIndex: 2,
+          display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+          paddingTop: '6%',
+        }}>
+          <img
+            src={photo}
+            alt={agent?.name}
+            style={{
+              width: '82%', maxHeight: '84%',
+              objectFit: 'contain', objectPosition: 'top center',
+              display: 'block',
+              filter: 'none',
+            }}
+          />
+        </div>
+      ) : (
+        <div style={{
+          position: 'absolute', top: '42%', left: '50%',
+          transform: 'translate(-50%, -50%)', zIndex: 2, opacity: 0.12,
+        }}>
+          <svg width="110" height="140" viewBox="0 0 80 100" fill="none">
+            <circle cx="40" cy="28" r="22" fill="white" />
+            <path d="M4 100 C4 65 76 65 76 100" fill="white" />
+          </svg>
+        </div>
+      )}
+
+      {/* z3: 오른쪽 삼각형 — 단색, 배경보다 살짝 밝은 네이비 */}
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 5,
+        background: '#1a3664',
+        clipPath: 'polygon(100% 50%, 100% 100%, 25% 100%)',
+      }} />
+
+      {/* z4: 하단 페이드 (자연스럽게 어둡게, 삼각형 아님) */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0, height: '45%',
+        zIndex: 3,
+        background: 'linear-gradient(to top, #060d1e 0%, #060d1e 20%, rgba(6,13,30,0.7) 55%, transparent 100%)',
+      }} />
+
+      {/* z5: 좌측 상단 로고 + 지점명 */}
+      <div style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 7 }}>
+        <img
+          src="/images/IncarProfile_logo2.svg"
+          alt="INCAR"
+          style={{ height: '40px', width: 'auto', display: 'block', marginBottom: '6px' }}
+        />
+        {agent?.branch && (
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', fontWeight: 500, margin: 0, letterSpacing: '0.3px' }}>
+            {agent.branch}
+          </p>
         )}
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '50%', background: 'linear-gradient(to top, #0e1e3c 0%, transparent 100%)', zIndex: 2 }} />
-        <div style={{ minHeight: '280px' }} />
       </div>
 
-      {/* 텍스트 영역 */}
-      <div style={{ padding: '32px 20px 0', position: 'relative', zIndex: 4 }}>
-        {/* 이름 */}
-        <h2 style={{ color: 'white', fontSize: '28px', fontWeight: 800, marginBottom: '4px', letterSpacing: '-0.5px' }}>
+      {/* z6: 우측 하단 이름 + 직책 + 태그 */}
+      <div style={{
+        position: 'absolute', bottom: '22px', right: '20px',
+        zIndex: 8, textAlign: 'right',
+      }}>
+        <h2 style={{
+          color: 'white', fontSize: '32px', fontWeight: 800,
+          margin: '0 0 3px', letterSpacing: '3px', lineHeight: 1.1,
+        }}>
           {agent?.name}
         </h2>
-        {/* 지점 · 직책 (회사명 제거) */}
-        {subLine && (
-          <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '13px', marginBottom: '6px' }}>
-            {subLine}
+        {agent?.position && (
+          <p style={{
+            color: 'rgba(255,255,255,0.55)', fontSize: '16px',
+            fontWeight: 500, margin: '0 0 10px', letterSpacing: '1px',
+          }}>
+            {agent.position}
           </p>
         )}
-        {/* 슬로건 */}
-        {agent?.slogan && (
-          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontStyle: 'italic', marginBottom: '0' }}>
-            "{agent.slogan}"
-          </p>
-        )}
-
-        {/* 구분선 */}
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', margin: '14px 0 12px' }} />
-
-        {/* 전문분야 태그 — 카드 하단 */}
         {specialtyArr.length > 0 && (
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {specialtyArr.map((s: string) => (
-              <span key={s} style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: 600, padding: '3px 9px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <span key={s} style={{
+                background: 'rgba(255,255,255,0.11)',
+                color: 'rgba(255,255,255,0.85)',
+                fontSize: '11px', fontWeight: 600,
+                padding: '4px 10px', borderRadius: '5px',
+                border: '1px solid rgba(255,255,255,0.2)',
+                letterSpacing: '0.2px',
+              }}>
                 {s}
               </span>
             ))}
           </div>
         )}
-
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '14px' }}>
-          <span style={{ fontFamily: 'Cormorant Garamond, serif', color: 'rgba(201,168,76,0.45)', fontSize: '11px', letterSpacing: '2px' }}>INCAR PROFILE</span>
-        </div>
       </div>
     </div>
   );
@@ -260,16 +311,16 @@ function SimpleCard({ profileData }: { profileData: ProfileData }) {
   return (
     <div style={{ borderRadius: '18px', background: 'white', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
       {/* 원형 프로필 */}
-      <div style={{ width: '84px', height: '84px', borderRadius: '50%', overflow: 'hidden', background: '#e8edf5', border: '2.5px solid #1e3a6e', marginBottom: '14px' }}>
+      <div style={{ width: '150px', height: '150px', borderRadius: '50%', overflow: 'hidden', background: '#e8edf5', border: '4px solid #1e3a6e', marginBottom: '14px' }}>
         {profileData.photoUrl && <img src={profileData.photoUrl} alt={agent?.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
       </div>
 
       {/* 이름 */}
-      <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#1a2540', marginBottom: '4px' }}>{agent?.name}</h2>
+      <h2 style={{ fontSize: '30px', fontWeight: 700, color: '#1a2540', marginBottom: '4px' }}>{agent?.name}</h2>
 
       {/* 지점 · 직책 */}
       {subLine && (
-        <p style={{ color: '#718096', fontSize: '13px', marginBottom: '4px' }}>{subLine}</p>
+        <p style={{ color: '#718096', fontSize: '17px', marginBottom: '4px' }}>{subLine}</p>
       )}
 
       {/* 슬로건 */}
@@ -289,7 +340,6 @@ function SimpleCard({ profileData }: { profileData: ProfileData }) {
         </div>
       )}
 
-      <p style={{ fontSize: '11px', color: '#cbd5e0', marginTop: '14px', fontFamily: 'Cormorant Garamond, serif', letterSpacing: '1px' }}>INCAR PROFILE</p>
     </div>
   );
 }

@@ -17,8 +17,8 @@ const TYPES = [
     targets: ['상반신 사진 보유자', '브랜드 이미지가 중요한 분'],
     previewText: '전문가 프로필 예시 보기 →',
     modalTitle: '전문가 프로필형',
-    modalDesc: '상반신 사진을 AI로 배경 제거 후, 고급 브랜드 카드 템플릿에 합성합니다.\n딥네이비 배경의 전문가 랜딩페이지 형태로 완성됩니다.',
-    modalImg: '/demo/preview-expert.png',
+    modalDesc: '상반신 사진을 AI로 배경 제거 후, 고급 브랜드 카드 템플릿에 합성합니다.',
+    modalImg: '/images/sample_pro.jpg',
   },
   {
     id: 'simple' as ProfileType,
@@ -28,8 +28,8 @@ const TYPES = [
     targets: ['신입 설계사', '사진 촬영이 어려운 경우'],
     previewText: '간편 프로필 예시 보기 →',
     modalTitle: '간편 프로필형',
-    modalDesc: '증명사진을 원형으로 배치하여 심플하고 깔끔한 프로필을 만듭니다.\n배경 제거 없이 빠르게 제작 가능합니다.',
-    modalImg: '/demo/preview-simple.png',
+    modalDesc: '증명사진을 원형으로 배치하여 심플하고 깔끔한 프로필을 만듭니다.',
+    modalImg: '/images/sample_lite.jpg',
   },
 ];
 
@@ -67,16 +67,18 @@ export default function StepProfileType({ selected, onSelect, onNext, isDemo }: 
           >
             <div className="flex gap-4">
               {/* 썸네일 */}
-              <div style={{
-                width: '100px', minWidth: '100px', height: '130px',
-                borderRadius: '10px',
-                background: chosen === type.id ? 'rgba(30,58,110,0.08)' : '#f1f5f9',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexDirection: 'column', gap: '6px', overflow: 'hidden',
-              }}>
-                <div style={{ width: '40px', height: '50px', borderRadius: '50% 50% 0 0', background: chosen === type.id ? 'rgba(30,58,110,0.2)' : '#cbd5e0' }} />
-                <div style={{ width: '60px', height: '30px', borderRadius: '4px', background: chosen === type.id ? 'rgba(30,58,110,0.15)' : '#e2e8f0' }} />
-              </div>
+             <div style={{
+                  width: '100px', minWidth: '100px', height: '130px',
+                  borderRadius: '10px',
+                  background: '#f1f5f9',
+                  overflow: 'hidden', flexShrink: 0,
+                }}>
+                  <img
+                    src={type.modalImg}
+                    alt={type.title}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
+                  />
+                </div>
 
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
@@ -154,20 +156,24 @@ export default function StepProfileType({ selected, onSelect, onNext, isDemo }: 
           >
             {/* 이미지 영역 */}
             <div style={{
-              background: '#f1f5f9', height: '200px',
+              background: '#f1f5f9', height: '480px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              position: 'relative',
+              position: 'relative', overflow: 'hidden',
             }}>
               <img
                 src={modalType.modalImg}
                 alt={modalType.modalTitle}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', position: 'relative', zIndex: 2 }}
+                onError={e => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  const placeholder = (e.target as HTMLImageElement).nextSibling as HTMLElement;
+                  if (placeholder) placeholder.style.display = 'flex';
+                }}
               />
-              {/* 이미지 없을 때 플레이스홀더 */}
+              {/* 이미지 없을 때만 표시되는 플레이스홀더 */}
               <div style={{
-                position: 'absolute', inset: 0,
-                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                position: 'absolute', inset: 0, zIndex: 1,
+                display: 'none', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 background: modalType.id === 'expert' ? 'linear-gradient(160deg,#1e3a6e,#0e1e3c)' : '#f8faff',
               }}>
                 <div style={{

@@ -17,7 +17,7 @@ export default function StepPhotoUpload({ profileType, onUpload, onNext, onBack,
 
   // 간편형
   const [simplePreview, setSimplePreview] = useState<string | null>(
-    isDemo ? '/demo/sample-agent.png' : null
+    isDemo ? '/images/sample.jpg' : null
   );
 
   // 전문가형 — Demo는 upload 단계부터 시작 (체감 개선)
@@ -28,7 +28,7 @@ export default function StepPhotoUpload({ profileType, onUpload, onNext, onBack,
 
   // Demo: 샘플 파일을 원본으로 세팅하고 preview 단계로
   const initDemo = () => {
-    setOriginal('/demo/sample-agent.png');
+    setOriginal('/images/sample.jpg');
     setPhase('preview');
   };
 
@@ -58,9 +58,9 @@ export default function StepPhotoUpload({ profileType, onUpload, onNext, onBack,
     if (isDemo) {
       // Demo: 2초 딜레이 후 샘플 누끼 이미지로 완료
       await new Promise(r => setTimeout(r, 2000));
-      setProcessed('/demo/sample-agent-nobg.png');
+      setProcessed('/images/sample_after.png');
       setPhase('done');
-      onUpload('/demo/sample-agent.png', '/demo/sample-agent-nobg.png'); // Demo: 원본 + 누끼
+      onUpload('/images/sample.png', '/images/sample_after.png'); // Demo: 원본 + 누끼
       return;
     }
 
@@ -142,7 +142,7 @@ export default function StepPhotoUpload({ profileType, onUpload, onNext, onBack,
         <div style={{ paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <button className="btn-primary"
             disabled={!simplePreview && !isDemo}
-            onClick={() => { if (isDemo) onUpload('/demo/sample-agent.png'); onNext(); }}>  // 간편형 Demo
+            onClick={() => { if (isDemo) onUpload('/images/sample.jpg'); onNext(); }}>  
             다음 단계
           </button>
           <button style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '14px', padding: '8px', cursor: 'pointer' }}

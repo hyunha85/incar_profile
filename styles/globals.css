@@ -28,6 +28,8 @@ html, body {
   background: #f5f6fa;
   font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* 모바일 최대 너비 컨테이너 */
@@ -36,7 +38,20 @@ html, body {
   margin: 0 auto;
   min-height: 100dvh;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* PC: 콘텐츠가 뷰포트 높이를 초과하면 스크롤 허용 */
+@media (min-width: 768px) {
+  html, body {
+    overflow-y: auto;
+  }
+  .mobile-container {
+    overflow-x: hidden;
+    overflow-y: visible;
+    min-height: 100vh;
+  }
 }
 
 /* 진행률 바 */
@@ -154,11 +169,11 @@ html, body {
   letter-spacing: 0.5px;
 }
 
-/* 스크롤바 숨기기 */
-::-webkit-scrollbar {
+/* 스크롤바 숨기기 — 모바일 컨테이너에만 적용 */
+.mobile-container::-webkit-scrollbar {
   display: none;
 }
-* {
+.mobile-container {
   scrollbar-width: none;
 }
 

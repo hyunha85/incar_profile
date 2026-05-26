@@ -40,8 +40,8 @@ function buildPrompt(agentInfo: AgentInfo, seed: number): string {
   ].filter(Boolean).join('\n');
 
   return `
-당신은 보험설계사 퍼스널 브랜딩 전문 카피라이터입니다.
-아래 설계사 정보를 바탕으로 실제 고객에게 보여줄 자기소개 문구를 작성해주세요.
+당신은 금융 전문가 퍼스널 브랜딩 프로필 작성 전문가입니다.
+아래 설계사 정보를 바탕으로 고객에게 공개되는 프로필 페이지용 자기소개를 작성하세요.
 
 요청번호: ${seed}
 요청번호가 달라질 때마다 반드시 다른 첫 문장, 다른 문장 구조, 다른 표현으로 작성하세요.
@@ -50,52 +50,43 @@ function buildPrompt(agentInfo: AgentInfo, seed: number): string {
 ${infoLines}
 
 [작성 목표]
-이 글은 회사 소개가 아니라 보험설계사 본인을 소개하는 글입니다.
-고객이 "이 사람에게 상담을 받아도 괜찮겠다"는 신뢰를 느끼도록 작성하세요.
+고객이 이 프로필을 보고 "상담을 받을 만한 전문가"라고 느끼도록 작성합니다.
+이 글은 광고가 아니라 보험설계사 본인의 전문성과 관점을 보여주는 소개입니다.
 
-[필수 조건]
-- 4~5줄 분량
-- 자연스러운 한국어
-- 반드시 완성된 문장으로 끝낼 것
-- 문장 중간에서 절대 끊기지 않게 작성
-- 상품명이나 보험 키워드만 나열하지 말 것
-- [설계사 정보]에 없는 보험 종목은 새로 만들지 말 것
-- "undefined", "null" 절대 포함 금지
-- 따옴표, 제목, 설명, 라벨 없이 본문만 출력
-- 각 문장은 줄바꿈으로 구분
+[필수 구성 흐름]
+전문분야 또는 일하는 방식 → 경력 기반 역량 → 고객을 대하는 가치관 → 신뢰 메시지
+(순서는 유연하게 조정 가능, 흐름이 자연스러우면 됨)
 
-[톤앤매너]
-- 실제 보험설계사가 고객에게 자신을 소개하는 느낌
-- 따뜻하지만 과장되지 않은 어조
-- 전문적이지만 딱딱하지 않은 문장
-- 가입을 강요하는 광고 문구처럼 쓰지 말 것
-- 회사 홍보문처럼 쓰지 말고, 사람 중심으로 쓸 것
+[형식 조건]
+- 4~5문장, 반드시 각 문장 사이에 실제 줄바꿈(개행문자)을 넣을 것
+- 문장을 한 줄로 이어서 쓰지 말 것. 반드시 엔터로 구분
+- 180~220자 수준
+- 반드시 완성된 마지막 문장으로 끝낼 것 (절대 중간에 끊기지 않도록)
+- 따옴표, 제목, 라벨, 설명 없이 본문만 출력
+- [설계사 정보]에 없는 보험 종목 임의 추가 금지
+- "undefined", "null" 포함 금지
 
-[피해야 할 표현]
-아래 표현은 너무 흔하므로 그대로 반복하지 마세요.
-- 든든한 금융 파트너
-- 신뢰를 바탕으로
-- 맞춤 솔루션을 제공합니다
-- 고객님의 미래를 함께합니다
-- 소중한 자산과 삶을 지켜드립니다
+[톤]
+- 전문적이고 신뢰감 있는 어조
+- 과도한 감성 표현 금지
+- 담백하고 명확한 문체
 
-[좋은 예시]
-보험은 가입보다 관리가 더 중요하다고 생각합니다.
-고객님의 현재 상황과 앞으로의 계획을 함께 살피며 꼭 필요한 보장을 제안드리겠습니다.
-한 번의 상담으로 끝나지 않고, 오래 믿고 연락할 수 있는 사람이 되겠습니다.
-필요한 순간 가장 먼저 떠오르는 설계사가 되겠습니다.
+[절대 사용 금지 표현]
+- "보험은 어렵습니다" / "쉽게 설명해드립니다"
+- "최고" / "최선" / "완벽"
+- "든든한 파트너" / "소중한 자산을 지켜드립니다"
+- "맞춤 솔루션" / "고객님의 미래를 함께합니다"
+- 보험 가입 유도 문구
+- 회사 홍보 문구
 
-한 번의 계약보다 오래 이어지는 관계를 더 중요하게 생각합니다.
-고객님의 생활과 가족의 상황을 충분히 이해한 뒤 현실적인 방향을 제안드리겠습니다.
-복잡한 보험을 쉽게 설명하고, 필요한 선택을 차분히 도와드리겠습니다.
-오래 믿고 상담할 수 있는 보험설계사가 되겠습니다.
+[참고 예시 — 이 스타일을 참고하되 그대로 쓰지 말 것]
+고객의 상황에 맞는 금융 설계를 중요하게 생각합니다.
+보험을 단순한 상품이 아닌 삶의 계획과 연결된 금융 솔루션으로 바라봅니다.
+10년 이상의 현장 경험을 바탕으로 필요한 보장이 무엇인지 함께 살피겠습니다.
+오래 믿고 연락할 수 있는 설계사가 되겠습니다.
 
-[나쁜 예시]
-고객님의 든든한 금융 파트너입니다.
-신뢰를 바탕으로 맞춤 솔루션을 제공합니다.
-건강 및 암 보험 전문 설계사입니다.
-
-위 나쁜 예시처럼 쓰지 말고, 좋은 예시의 자연스러운 흐름을 참고해 새로운 자기소개 문구만 작성하세요.
+위 예시를 참고하되, 반드시 새로운 표현과 구조로 작성하세요.
+본문만 출력하세요.
 `;
 }
 
@@ -108,9 +99,14 @@ async function callGemini(model: string, prompt: string, apiKey: string): Promis
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
-        temperature: 1.05,
+        temperature: 0.75,
         topP: 0.9,
-        maxOutputTokens: 360,
+        maxOutputTokens: 1024,
+        // Gemini 2.5 시리즈는 thinking(내부 추론) 토큰이 maxOutputTokens를 잠식해
+        // 실제 텍스트 출력이 중간에 잘리는 문제가 발생함.
+        // thinkingBudget: 0 으로 thinking 비활성화.
+        // 2.0-flash-lite 등 미지원 모델은 이 필드를 무시함.
+        thinkingConfig: { thinkingBudget: 0 },
       },
     }),
   });
@@ -121,12 +117,35 @@ async function callGemini(model: string, prompt: string, apiKey: string): Promis
   }
 
   const data = await res.json();
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+
+  const candidate = data?.candidates?.[0];
+
+  // finishReason이 MAX_TOKENS이면 토큰 초과로 잘린 것 — 경고 로그
+  const finishReason = candidate?.finishReason;
+  if (finishReason === 'MAX_TOKENS') {
+    console.warn(`[Gemini] (${model}) finishReason=MAX_TOKENS — 응답이 토큰 한도로 잘렸을 수 있음`);
+  }
+
+  // parts가 배열일 수 있으므로 전체 합산
+  const parts = candidate?.content?.parts;
+  const text = Array.isArray(parts)
+    ? parts.map((p: any) => p?.text ?? '').join('').trim()
+    : (parts?.[0]?.text ?? '').trim();
+
+  console.log(`[Gemini] (${model}) 응답 길이: ${text?.length ?? 0}자 | finishReason: ${finishReason}`);
 
   if (!text) throw new Error(`Gemini 응답 없음 (${model})`);
   if (/undefined|null/.test(text)) throw new Error('응답에 undefined/null 포함');
 
-  return text;
+  // 줄바꿈 보정: Gemini가 \n 대신 공백으로 문장을 이어쓰는 경우 처리
+  // "습니다. 다음문장" → "습니다.\n다음문장" 형태로 변환
+  const normalized = text
+    .replace(/\.\s{1,2}(?=[가-힣])/g, '.\n')
+    .trim();
+
+  console.log(`[Gemini] (${model}) 최종 출력:\n${normalized}`);
+
+  return normalized;
 }
 
 export async function generateIntroWithGemini(

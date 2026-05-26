@@ -21,7 +21,7 @@ export default function Home() {
         justifyContent: 'center',
         padding: '0 32px',
         position: 'relative',
-        overflow: 'hidden',
+        overflow: 'visible',  // 배경 장식용 absolute 요소는 mobile-container가 clip
       }}>
 
         {/* 배경 미묘한 빛 */}
@@ -91,8 +91,8 @@ export default function Home() {
               lineHeight: 1.7,
               marginBottom: '0',
             }}>
-              고객이 기억하는 전문가로,<br />
-              AI가 당신의 가치를 더 돋보이게 합니다.
+              신뢰는 쌓이고 전문성은 기억되도록,<br />
+              당신만의 브랜딩을 완성하세요.
             </p>
           </div>
 
