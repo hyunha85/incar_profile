@@ -83,12 +83,7 @@ export default function StepUserIntro({
     setError('');
 
     try {
-      if (isDemo) {
-        await new Promise(r => setTimeout(r, 1500));
-        setValue(buildDemoVariant(agentInfo, requestId));
-        return;
-      }
-
+      // isDemo 여부 무관하게 실제 Gemini API 호출
       // ?r= 쿼리로 URL 캐시 우회, body에도 requestId 포함
       const res = await fetch(`/api/ai/generate?r=${requestId}`, {
         method: 'POST',
