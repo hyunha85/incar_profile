@@ -3,10 +3,10 @@ import { AgentInfo } from '@/types';
 const MODELS = [
   'gemini-2.5-flash',
   'gemini-2.5-flash-preview-05-20',
-  'gemini-1.5-flash-latest',
+  'gemini-2.0-flash-lite',
 ];
 
-const BASE_URL = 'https://generativelanguage.googleapis.com/v1/models';
+const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
 function safe(v: any): string {
   if (!v || String(v) === 'undefined' || String(v) === 'null') return '';
@@ -93,6 +93,9 @@ ${infoLines}
 async function callGemini(model: string, prompt: string, apiKey: string): Promise<string> {
   const url = `${BASE_URL}/${model}:generateContent?key=${apiKey}`;
 
+  // gemini-2.5 시리즈만 thinkingConfig 지원
+  const is25 = model.startsWith('gemini-2.5');
+
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -102,11 +105,7 @@ async function callGemini(model: string, prompt: string, apiKey: string): Promis
         temperature: 0.75,
         topP: 0.9,
         maxOutputTokens: 1024,
-        // Gemini 2.5 시리즈는 thinking(내부 추론) 토큰이 maxOutputTokens를 잠식해
-        // 실제 텍스트 출력이 중간에 잘리는 문제가 발생함.
-        // thinkingBudget: 0 으로 thinking 비활성화.
-        // 2.0-flash-lite 등 미지원 모델은 이 필드를 무시함.
-        thinkingConfig: { thinkingBudget: 0 },
+        ...(is25 ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
       },
     }),
   });
@@ -120,13 +119,11 @@ async function callGemini(model: string, prompt: string, apiKey: string): Promis
 
   const candidate = data?.candidates?.[0];
 
-  // finishReason이 MAX_TOKENS이면 토큰 초과로 잘린 것 — 경고 로그
   const finishReason = candidate?.finishReason;
   if (finishReason === 'MAX_TOKENS') {
     console.warn(`[Gemini] (${model}) finishReason=MAX_TOKENS — 응답이 토큰 한도로 잘렸을 수 있음`);
   }
 
-  // parts가 배열일 수 있으므로 전체 합산
   const parts = candidate?.content?.parts;
   const text = Array.isArray(parts)
     ? parts.map((p: any) => p?.text ?? '').join('').trim()
@@ -137,8 +134,6 @@ async function callGemini(model: string, prompt: string, apiKey: string): Promis
   if (!text) throw new Error(`Gemini 응답 없음 (${model})`);
   if (/undefined|null/.test(text)) throw new Error('응답에 undefined/null 포함');
 
-  // 줄바꿈 보정: Gemini가 \n 대신 공백으로 문장을 이어쓰는 경우 처리
-  // "습니다. 다음문장" → "습니다.\n다음문장" 형태로 변환
   const normalized = text
     .replace(/\.\s{1,2}(?=[가-힣])/g, '.\n')
     .trim();
