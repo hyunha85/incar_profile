@@ -6,7 +6,7 @@ const MODELS = [
   'gemini-1.5-flash',
 ];
 
-const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
+const BASE_URL = 'https://generativelanguage.googleapis.com/v1/models';
 
 function safe(v: any): string {
   if (!v || String(v) === 'undefined' || String(v) === 'null') return '';
