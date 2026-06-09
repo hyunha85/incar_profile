@@ -3,7 +3,7 @@ import { AgentInfo } from '@/types';
 const MODELS = [
   'gemini-2.5-flash',
   'gemini-2.5-flash-preview-05-20',
-  'gemini-1.5-flash',
+  'gemini-1.5-flash-latest',
 ];
 
 const BASE_URL = 'https://generativelanguage.googleapis.com/v1/models';
