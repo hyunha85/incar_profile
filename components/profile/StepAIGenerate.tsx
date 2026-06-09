@@ -31,18 +31,61 @@ export default function StepAIGenerate({ profileData, onComplete, isDemo }: Prop
 
   const runDemo = async () => {
     const demoData = profileData.profileType === 'simple' ? DEMO_SIMPLE_PROFILE : DEMO_PROFILE;
-    for (let i = 0; i < STEPS.length; i++) {
-      setCurrentStep(i);
-      setProgress((i / STEPS.length) * 100);
-      await sleep(600);
+    try {
+      setCurrentStep(0); setProgress(15);
+      await sleep(400);
+
+      setCurrentStep(1); setProgress(40);
+
+      // 데모 모드에서도 실제 Gemini API 호출
+      let aiIntro: string | undefined;
+      try {
+        const aiRes = await fetch('/api/ai/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            agentInfo: demoData.agentInfo,
+            requestId: Date.now(),
+          }),
+        });
+        const text = await aiRes.text();
+        try {
+          const aiData = JSON.parse(text);
+          aiIntro = aiData.intro;
+        } catch {
+          console.warn('Demo AI generate: JSON 파싱 실패');
+        }
+      } catch (aiErr: any) {
+        console.warn('Demo AI generate fallback:', aiErr.message);
+      }
+
+      // Gemini 실패 시 demoData의 기본 문구로 폴백
+      if (!aiIntro) {
+        aiIntro = demoData.aiIntro;
+      }
+
+      setCurrentStep(2); setProgress(70);
+      await sleep(400);
+
+      setCurrentStep(3); setProgress(90);
+      await sleep(400);
+
+      setProgress(100);
+      await sleep(300);
+      setDone(true);
+      onComplete({
+        aiIntro,
+        recommendedQuestions: demoData.recommendedQuestions,
+      });
+    } catch (e: any) {
+      // 전체 실패 시 기존 demoData 문구로 폴백
+      setProgress(100);
+      setDone(true);
+      onComplete({
+        aiIntro: demoData.aiIntro,
+        recommendedQuestions: demoData.recommendedQuestions,
+      });
     }
-    setProgress(100);
-    await sleep(400);
-    setDone(true);
-    onComplete({
-      aiIntro: demoData.aiIntro,
-      recommendedQuestions: demoData.recommendedQuestions,
-    });
   };
 
   const safeJson = async (response: Response) => {
@@ -248,7 +291,7 @@ export default function StepAIGenerate({ profileData, onComplete, isDemo }: Prop
 
       {isDemo && (
         <div style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>
-          🎭 Demo 모드: 실제 API 호출 없이 샘플 결과를 생성합니다.
+          🎭 Demo 모드: AI가 샘플 설계사 정보로 실제 소개문을 생성합니다.
         </div>
       )}
 
