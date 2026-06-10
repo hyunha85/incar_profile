@@ -35,7 +35,6 @@ function buildInitialValue(agentInfo: AgentInfo): string {
   ].filter((l, i) => !(i === 0 && !career)).join('\n');
 }
 
-// Demo 전용 — 3가지 변형으로 매번 다른 문구
 function buildDemoVariant(agentInfo: AgentInfo, seed: number): string {
   const careersArr = Array.isArray(agentInfo?.careers)
     ? agentInfo.careers.filter(c => c?.trim()) : [];
@@ -68,23 +67,18 @@ export default function StepUserIntro({
 }: Props) {
   const [value, setValue] = useState<string>(userIntro || buildInitialValue(agentInfo));
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!userIntro) setValue(buildInitialValue(agentInfo));
   }, []);
 
-  // ── 핵심: confirmOverwrite 없음, 클릭마다 무조건 새 Gemini 호출 ──
   const handleAIClick = async () => {
     const requestId = Date.now();
-    console.log('AI CLICK', requestId); // 매 클릭마다 찍혀야 함
+    console.log('AI CLICK', requestId);
 
     setLoading(true);
-    setError('');
 
     try {
-      // isDemo 여부 무관하게 실제 Gemini API 호출
-      // ?r= 쿼리로 URL 캐시 우회, body에도 requestId 포함
       const res = await fetch(`/api/ai/generate?r=${requestId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -96,24 +90,21 @@ export default function StepUserIntro({
       const data = await res.json();
       console.log('[AI] 응답 requestId:', data.requestId, '| requestId sent:', requestId);
 
-      // Gemini 실패 원인 콘솔 출력 — Vercel 로그 + 브라우저 개발자도구에서 확인
       if (data.geminiError) {
         console.error('[AI] Gemini 실패 원인:', data.geminiError);
-        setError(`AI 문구 생성 실패: ${data.geminiError}`);
-        return; // 실패 시 textarea 유지
       }
       if (data.warning) {
         console.warn('[AI] 경고:', data.warning);
       }
 
-      // 성공 시 기존 값 무조건 덮어쓰기
+      // 성공/실패 무관하게 intro 있으면 표시 (에러 화면 표시 안 함)
       setValue(data.intro || DEFAULT_INTRO);
 
     } catch (e: any) {
       console.error('AI ERROR:', e.message);
-      setError('문구 생성에 실패했습니다. 다시 시도해주세요.');
+      // 에러 화면에 표시 안 함 — 기존 값 유지
     } finally {
-      setLoading(false); // 반드시 finally에서 reset
+      setLoading(false);
     }
   };
 
@@ -131,7 +122,6 @@ export default function StepUserIntro({
         <p style={{ color: '#94a3b8', fontSize: '14px' }}>직접 작성하거나 AI 추천 문구를 수정하세요.</p>
       </div>
 
-      {/* AI 버튼 — disabled는 loading 중일 때만, 그 외 항상 클릭 가능 */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
         <button
           onClick={handleAIClick}
@@ -150,10 +140,6 @@ export default function StepUserIntro({
           {loading ? '생성 중...' : 'AI 추천 문구 생성'}
         </button>
       </div>
-
-      {error && (
-        <p style={{ fontSize: '13px', color: '#e53e3e', marginBottom: '8px' }}>{error}</p>
-      )}
 
       <textarea
         value={value}
